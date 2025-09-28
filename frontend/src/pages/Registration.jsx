@@ -141,10 +141,10 @@ const handleFormSubmission = async (formData) => {
                   <h2>Upload Your Document</h2>
                   <p>Upload an ID card, registration form, or any document containing personal information. Our OCR system will extract the data and auto-populate the registration form.</p>
                   <ul>
-                    <li>✓ Supports PDF, JPG, PNG formats</li>
-                    <li>✓ Automatic data extraction</li>
-                    <li>✓ High accuracy OCR processing</li>
-                    <li>✓ Secure document handling</li>
+                    <li> Supports PDF, JPG, PNG formats</li>
+                    <li> Automatic data extraction</li>
+                    <li> High accuracy OCR processing</li>
+                    <li> Secure document handling</li>
                   </ul>
                 </div>
                 <DocumentUpload 

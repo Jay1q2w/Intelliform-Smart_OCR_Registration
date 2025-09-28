@@ -29,14 +29,14 @@ const Footer = () => {
             <div className="footer-links">
               <button 
                 className="footer-link" 
-                onClick={() => window.open('https://github.com', '_blank')}
+                onClick={() => window.open('https://github.com/Jay1q2w', '_blank')}
               >
                 <Github size={18} />
                 <span>GitHub</span>
               </button>
               <button 
                 className="footer-link"
-                onClick={() => window.location.href = 'mailto:contact@ocrverifier.com'}
+                onClick={() => window.location.href = 'mailto:jaygheewala06@gmail.com'}
               >
                 <Mail size={18} />
                 <span>Contact</span>
