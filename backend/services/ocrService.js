@@ -142,19 +142,17 @@ class OCRService {
         /works?\s+as[:\s]*(.+)/i
       ],
       
-      // ID/License patterns (Unchanged)
       id: [
         /^(id|identification|card number|license|aadhar|pan)[:\s#]*([a-zA-Z0-9]+)$/i,
         /id[:\s#]*([a-zA-Z0-9]+)/i
       ],
       
-      // Nationality patterns (Unchanged)
       nationality: [
         /^(nationality|citizen|country)[:\s]+(.+)$/i,
         /nationality[:\s]*(.+)/i,
         /citizen\s+of[:\s]*(.+)/i
       ],
-    emergencycontact: [
+      emergencycontact: [
         /^(emergency phone|emergency mobile|emergency contact|emergency phone number|emergency mobile number|emergency)[:\s]+([\+\d\s\-\(\)]+)/i,
         /(\+?[\d\s\-()]{8,})/
       ]
