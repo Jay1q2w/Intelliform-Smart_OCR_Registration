@@ -8,8 +8,8 @@ class OCRService {
   constructor() {
     this.tesseractOptions = {
       logger: m => console.log(m),
-      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?-_()[]{}@#$%^&*+=<>/|\\~`"\' ',
+      tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,  // <-- SYNTAX ERROR: Missing comma here!
+      tessedit_char_whitelist: '...'
     };
   }
 
@@ -17,12 +17,13 @@ class OCRService {
     try {
       const image = await Jimp.read(imagePath);
       
+      // Improved image processing pipeline for better OCR accuracy
       await image
-        .greyscale()
-        .contrast(0.5)
-        .normalize()
-        .threshold({ max: 180 })
-        .resize(image.bitmap.width * 2, image.bitmap.height * 2, Jimp.RESIZE_BILINEAR);
+        .greyscale() // 1. Convert the image to grayscale
+        .invert()    // 2. Invert the colors (IMPORTANT: turns white text on dark bg to black text on light bg)
+        .contrast(1) // 3. Apply maximum contrast to make text sharp and clear
+        .normalize() // 4. Normalize the image to improve overall quality
+        .resize(image.bitmap.width * 2, image.bitmap.height * 2, Jimp.RESIZE_BILINEAR); // 5. Enlarge image for better character recognition
 
       const processedPath = imagePath.replace(path.extname(imagePath), '_processed' + path.extname(imagePath));
       await image.writeAsync(processedPath);
@@ -30,6 +31,7 @@ class OCRService {
       return processedPath;
     } catch (error) {
       console.error('Image preprocessing error:', error);
+      // If preprocessing fails, return the original path to attempt OCR anyway
       return imagePath;
     }
   }
@@ -83,71 +85,70 @@ class OCRService {
     
     // Enhanced patterns for registration form data
     const patterns = {
-      // Name patterns
+      // Name patterns (Unchanged)
       name: [
         /^(name|full name|first name|last name)[:\s]+(.+)$/i,
         /^(.+)\s+(name)$/i,
         /name[:\s]*([a-zA-Z\s]+)/i
       ],
       
-      // Age patterns
+      // Age patterns (Unchanged)
       age: [
         /^(age)[:\s]+(\d+)$/i,
         /age[:\s]*(\d+)/i,
         /(\d+)\s*years?\s*old/i
       ],
       
-      // Gender patterns
+      // Gender patterns (Unchanged)
       gender: [
         /^(gender|sex)[:\s]+(male|female|other|m|f)$/i,
         /gender[:\s]*(male|female|other|m|f)/i,
         /(male|female)\s*$/i
       ],
       
-      // Email patterns
+      // Email patterns (Unchanged)
       email: [
         /^(email|email id|e-mail)[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i,
         /email[:\s]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i,
         /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/
       ],
       
-      // Phone patterns
+      // Phone patterns (UPDATED FOR MORE FLEXIBILITY)
       phone: [
-        /^(phone|mobile|contact|phone number|mobile number)[:\s]+([\+\d\s\-\(\)]+)$/i,
-        /phone[:\s]*([\+\d\s\-\(\)]+)/i,
-        /mobile[:\s]*([\+\d\s\-\(\)]+)/i,
-        /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/
+        // This pattern is good, it looks for a label like "Phone:"
+        /^(phone|mobile|contact|phone number|mobile number)[:\s]+([\+\d\s\-\(\)]+)/i,
+        
+        /(\+?[\d\s\-()]{8,})/
       ],
       
-      // Address patterns
+      // Address patterns (Unchanged)
       address: [
         /^(address|addr|location)[:\s]+(.+)$/i,
         /address[:\s]*(.+)/i,
         /(\d+[,\s]+[a-zA-Z\s,.-]+)/
       ],
       
-      // Date of Birth patterns
-      dateOfBirth: [
-        /^(date of birth|dob|birth date)[:\s]+(.+)$/i,
-        /dob[:\s]*(.+)/i,
-        /born[:\s]*(.+)/i,
-        /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/
+        dateOfBirth: [
+        /^(date of birth|dob|d\.o\.b\.|birth date|birthdate|DOB|D.O.B)[:\s]+(.+)/i,
+        /(\d{1,2}[-\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-\s]\d{2,4})/i,
+        /(\d{1,2}[\/\-.]\s?\d{1,2}[\/\-.]\s?\d{2,4})/
       ],
+
       
-      // Occupation patterns
+      // Occupation patterns (Unchanged)
       occupation: [
-        /^(occupation|job|profession|work)[:\s]+(.+)$/i,
+        /^(Occupation|Job|profession|work)[:\s]+(.+)$/i,
         /occupation[:\s]*(.+)/i,
         /works?\s+as[:\s]*(.+)/i
       ],
       
-      // ID/License patterns
+      // ID/License patterns (Unchanged)
       id: [
         /^(id|identification|card number|license|aadhar|pan)[:\s#]*([a-zA-Z0-9]+)$/i,
         /id[:\s#]*([a-zA-Z0-9]+)/i
       ],
       
-      // Nationality patterns
+      // Nationality patterns (Unchanged)
       nationality: [
         /^(nationality|citizen|country)[:\s]+(.+)$/i,
         /nationality[:\s]*(.+)/i,
@@ -164,20 +165,24 @@ class OCRService {
         
         patternArray.forEach(pattern => {
           const match = trimmedLine.match(pattern);
+          console.log(`[OCR RAW LINE]: "${trimmedLine}"`);
           if (match) {
             let value = '';
             
-            if (fieldName === 'name' || fieldName === 'address' || fieldName === 'occupation' || fieldName === 'nationality') {
+            // This logic is complex, let's simplify value extraction
+            if (match.length > 2) { // Typically for patterns like (key)(value)
               value = match[2] || match[1];
-            } else if (fieldName === 'age') {
-              value = match[2] || match[1];
-            } else if (fieldName === 'gender') {
-              const genderValue = (match[2] || match[1]).toLowerCase();
-              if (genderValue === 'm' || genderValue === 'male') value = 'Male';
-              else if (genderValue === 'f' || genderValue === 'female') value = 'Female';
-              else value = 'Other';
-            } else {
+            } else if (match.length > 1) { // Typically for patterns that just find the (value)
               value = match[1] || match[0];
+            } else {
+              value = match[0];
+            }
+
+            if (fieldName === 'gender') {
+              const genderValue = value.toLowerCase();
+              if (genderValue.startsWith('m')) value = 'Male';
+              else if (genderValue.startsWith('f')) value = 'Female';
+              else value = 'Other';
             }
             
             if (value && value.trim()) {
@@ -188,26 +193,23 @@ class OCRService {
       });
     });
     
-    // Post-processing cleanup
+    // Post-processing cleanup (Unchanged)
     Object.keys(fields).forEach(key => {
       if (fields[key]) {
-        // Clean up common OCR artifacts
         fields[key] = fields[key]
-          .replace(/[:|,]$/, '') // Remove trailing colons/commas
-          .replace(/^\W+|\W+$/g, '') // Remove leading/trailing non-word chars
+          .replace(/[:|,]$/, '')
+          .replace(/^\W+|\W+$/g, '')
           .trim();
       }
     });
 
-    // If no structured data found, try to extract from raw text
+    // Fallback if no structured data found (Unchanged)
     if (Object.keys(fields).length === 0) {
       fields.rawText = text;
       
-      // Try basic email extraction
       const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
       if (emailMatch) fields.email = emailMatch[1];
       
-      // Try basic phone extraction
       const phoneMatch = text.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/);
       if (phoneMatch) fields.phone = phoneMatch[0];
     }

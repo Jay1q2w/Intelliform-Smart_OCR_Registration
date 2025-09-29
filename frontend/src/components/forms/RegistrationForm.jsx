@@ -2,6 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Save, Edit3, Check, User, Mail, Phone, MapPin, Calendar, Users } from 'lucide-react';
 
+// +++ 1. ADD THIS HELPER FUNCTION +++
+// This function converts a date string (like "13 Jul 2006") into "YYYY-MM-DD"
+const formatDateForInput = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    return ''; // Return empty if date is not parsable
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+
 const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +38,8 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
   // Auto-populate form with extracted data
   useEffect(() => {
     if (extractedData) {
+      const dobFromData = extractedData.dateOfBirth || extractedData.dob || extractedData.birthDate || '';
+
       const mappedData = {
         name: extractedData.name || extractedData.fullName || extractedData['full name'] || '',
         age: extractedData.age || '',
@@ -29,7 +47,8 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
         address: extractedData.address || '',
         email: extractedData.email || extractedData.emailId || extractedData['email id'] || '',
         phone: extractedData.phone || extractedData.mobile || extractedData.phoneNumber || extractedData['phone number'] || '',
-        dateOfBirth: extractedData.dateOfBirth || extractedData.dob || extractedData.birthDate || '',
+        // +++ 2. USE THE HELPER FUNCTION HERE +++
+        dateOfBirth: formatDateForInput(dobFromData),
         occupation: extractedData.occupation || extractedData.job || '',
         emergencyContact: extractedData.emergencyContact || extractedData.emergency || '',
         nationality: extractedData.nationality || extractedData.country || ''
@@ -38,6 +57,11 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
       setFormData(mappedData);
     }
   }, [extractedData]);
+
+  // ... (The rest of your component remains exactly the same)
+  // handleInputChange, toggleEditMode, validateForm, handleSubmit, formFields, renderField etc.
+  // No other changes are needed below this line.
+// The rest of your file...
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -166,7 +190,7 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
   const renderField = (field) => {
     const isEditing = editMode[field.key];
     const hasError = errors[field.key];
-    const hasExtractedData = extractedData && extractedData[field.key];
+    const hasExtractedData = extractedData && (extractedData[field.key] || (field.key === 'dateOfBirth' && (extractedData.dob || extractedData.birthDate)));
     
     return (
       <motion.div
