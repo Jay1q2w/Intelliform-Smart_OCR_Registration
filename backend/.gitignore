@@ -1,2 +1,3 @@
 /node_modules
 .env
+/TrOCR_Service/venv

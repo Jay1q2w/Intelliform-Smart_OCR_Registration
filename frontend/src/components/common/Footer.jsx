@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Github, Mail } from 'lucide-react';
+import { FileText, Github, Mail,Linkedin } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,7 +9,7 @@ const Footer = () => {
           <div className="footer-section">
             <div className="footer-logo">
               <FileText size={24} />
-              <span>OCR Verifier</span>
+              <span>Intelliform</span>
             </div>
             <p>Advanced OCR solution for text extraction and verification</p>
           </div>
@@ -39,14 +39,22 @@ const Footer = () => {
                 onClick={() => window.location.href = 'mailto:jaygheewala06@gmail.com'}
               >
                 <Mail size={18} />
-                <span>Contact</span>
+                <span>jaygheewala06@gmail.com</span>
               </button>
+                <button 
+                className="footer-link" 
+                onClick={() => window.open('https://www.linkedin.com/in/jay-gheewala-1b886728b/', '_blank')}
+              >
+                <Linkedin size={18} />
+                <span>LinkedIn</span>
+              </button>
+
             </div>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2025 OCR Verifier. All rights reserved.</p>
+          <p>&copy; 2025 INTELLIFORM. All rights reserved.</p>
         </div>
       </div>
     </footer>

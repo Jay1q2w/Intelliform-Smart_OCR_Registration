@@ -21,7 +21,7 @@ const Header = () => {
       <div className="container">
 <Link to="/" className="logo">
   <Database size={28} />
-  <span>Smart Registration</span>
+  <span>IntelliForm </span>
 </Link>
 
         <nav className="nav">

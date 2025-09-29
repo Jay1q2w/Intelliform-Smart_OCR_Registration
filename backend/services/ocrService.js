@@ -87,7 +87,7 @@ class OCRService {
     const patterns = {
       // Name patterns (Unchanged)
       name: [
-        /^(name|full name|first name|last name)[:\s]+(.+)$/i,
+        /^(name|full name|first name|last name|nome|nam|nama|mame)[:\s]+(.+)$/i,
         /^(.+)\s+(name)$/i,
         /name[:\s]*([a-zA-Z\s]+)/i
       ],
@@ -101,14 +101,14 @@ class OCRService {
       
       // Gender patterns (Unchanged)
       gender: [
-        /^(gender|sex)[:\s]+(male|female|other|m|f)$/i,
+        /^(gender|sex|gende|ender|gander)[:\s]+(male|female|other|m|f)$/i,
         /gender[:\s]*(male|female|other|m|f)/i,
         /(male|female)\s*$/i
       ],
       
       // Email patterns (Unchanged)
       email: [
-        /^(email|email id|e-mail)[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i,
+        /^(email|email id|e-mail|mail|maail|gmail|)[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i,
         /email[:\s]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i,
         /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/
       ],
@@ -116,7 +116,7 @@ class OCRService {
       // Phone patterns (UPDATED FOR MORE FLEXIBILITY)
       phone: [
         // This pattern is good, it looks for a label like "Phone:"
-        /^(phone|mobile|contact|phone number|mobile number)[:\s]+([\+\d\s\-\(\)]+)/i,
+        /^(phone|mobile|contact|phone number|mobile number|fone)[:\s]+([\+\d\s\-\(\)]+)/i,
         
         /(\+?[\d\s\-()]{8,})/
       ],
@@ -130,7 +130,7 @@ class OCRService {
       
         dateOfBirth: [
         /^(date of birth|dob|d\.o\.b\.|birth date|birthdate|DOB|D.O.B)[:\s]+(.+)/i,
-        /(\d{1,2}[-\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-\s]\d{2,4})/i,
+        /(\d{1,2}[-\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|may|june|july|august|september|october)[a-z]*[-\s]\d{2,4})/i,
         /(\d{1,2}[\/\-.]\s?\d{1,2}[\/\-.]\s?\d{2,4})/
       ],
 
@@ -153,9 +153,12 @@ class OCRService {
         /^(nationality|citizen|country)[:\s]+(.+)$/i,
         /nationality[:\s]*(.+)/i,
         /citizen\s+of[:\s]*(.+)/i
+      ],
+    emergencycontact: [
+        /^(emergency phone|emergency mobile|emergency contact|emergency phone number|emergency mobile number|emergency)[:\s]+([\+\d\s\-\(\)]+)/i,
+        /(\+?[\d\s\-()]{8,})/
       ]
-    };
-
+};
     // Process each line against all patterns
     lines.forEach(line => {
       const trimmedLine = line.trim();
