@@ -1,9 +1,336 @@
 class VerificationService {
-  constructor() {
-    this.similarityThreshold = 0.8;
+  verifyDocument(extractedData, submittedData) {
+    console.log('Starting verification process...');
+    console.log('Extracted data keys:', Object.keys(extractedData));
+    console.log('Submitted data keys:', Object.keys(submittedData));
+
+    const results = [];
+    
+    // Get all fields from submitted data to verify
+    const fieldsToVerify = Object.keys(submittedData).filter(field => 
+      field !== 'metadata' && field !== 'verificationResults' && submittedData[field] !== ''
+    );
+    
+    console.log('Fields to verify:', fieldsToVerify);
+    
+    fieldsToVerify.forEach(field => {
+      const originalValue = extractedData[field] || '';
+      const submittedValue = submittedData[field] || '';
+      
+      // Skip metadata fields and empty values
+      if (field === 'metadata' || field === 'verificationResults') {
+        return;
+      }
+      
+      const verification = this.verifyField(field, originalValue, submittedValue);
+      results.push({
+        field,
+        originalValue: originalValue.toString(),
+        submittedValue: submittedValue.toString(),
+        match: verification.match,
+        confidence: verification.confidence,
+        timestamp: new Date()
+      });
+    });
+
+    const summary = this.generateSummary(results);
+    
+    console.log('Verification completed. Summary:', summary);
+    
+    return {
+      results,
+      summary
+    };
   }
 
-  calculateLevenshteinDistance(str1, str2) {
+  verifyField(fieldName, originalValue, submittedValue) {
+    // Handle empty values
+    if (!originalValue && !submittedValue) {
+      return { match: true, confidence: 100 };
+    }
+    
+    if (!originalValue || !submittedValue) {
+      // If original is empty but submitted has value, it's a partial match
+      if (!originalValue && submittedValue) {
+        return { match: false, confidence: 50 };
+      }
+      return { match: false, confidence: 0 };
+    }
+
+    const original = originalValue.toString().toLowerCase().trim();
+    const submitted = submittedValue.toString().toLowerCase().trim();
+
+    // Exact match
+    if (original === submitted) {
+      return { match: true, confidence: 100 };
+    }
+
+    // Field-specific verification logic
+    switch (fieldName) {
+      case 'name':
+        return this.verifyName(original, submitted);
+      
+      case 'age':
+        return this.verifyAge(original, submitted);
+      
+      case 'gender':
+        return this.verifyGender(original, submitted);
+      
+      case 'email':
+        return this.verifyEmail(original, submitted);
+      
+      case 'phone':
+      case 'emergencyContact':
+        return this.verifyPhone(original, submitted);
+      
+      case 'dateOfBirth':
+        return this.verifyDate(original, submitted);
+      
+      case 'address':
+        return this.verifyAddress(original, submitted);
+      
+      case 'occupation':
+      case 'nationality':
+        return this.verifyText(original, submitted);
+      
+      default:
+        return this.verifyGeneric(original, submitted);
+    }
+  }
+
+  verifyName(original, submitted) {
+    // Remove extra spaces and normalize
+    const normalizeNamePart = (name) => name.replace(/\s+/g, ' ').trim();
+    const orig = normalizeNamePart(original);
+    const subm = normalizeNamePart(submitted);
+    
+    if (orig === subm) {
+      return { match: true, confidence: 100 };
+    }
+
+    // Check if names contain each other
+    const origWords = orig.split(' ').filter(word => word.length > 0);
+    const submWords = subm.split(' ').filter(word => word.length > 0);
+    
+    const commonWords = origWords.filter(word => 
+      submWords.some(submWord => 
+        this.calculateSimilarity(word, submWord) > 0.8
+      )
+    );
+    
+    const similarity = commonWords.length / Math.max(origWords.length, submWords.length);
+    const confidence = Math.round(similarity * 100);
+    
+    return {
+      match: confidence >= 70,
+      confidence
+    };
+  }
+
+  verifyAge(original, submitted) {
+    const origAge = parseInt(original);
+    const submAge = parseInt(submitted);
+    
+    if (isNaN(origAge) || isNaN(submAge)) {
+      return { match: false, confidence: 0 };
+    }
+    
+    const diff = Math.abs(origAge - submAge);
+    
+    if (diff === 0) {
+      return { match: true, confidence: 100 };
+    } else if (diff <= 1) {
+      return { match: true, confidence: 90 };
+    } else if (diff <= 2) {
+      return { match: false, confidence: 70 };
+    } else {
+      return { match: false, confidence: Math.max(0, 50 - (diff * 10)) };
+    }
+  }
+
+  verifyGender(original, submitted) {
+    const genderMap = {
+      'm': 'male',
+      'f': 'female',
+      'male': 'male',
+      'female': 'female',
+      'other': 'other'
+    };
+    
+    const orig = genderMap[original.toLowerCase()] || original.toLowerCase();
+    const subm = genderMap[submitted.toLowerCase()] || submitted.toLowerCase();
+    
+    if (orig === subm) {
+      return { match: true, confidence: 100 };
+    }
+    
+    return { match: false, confidence: 0 };
+  }
+
+  verifyEmail(original, submitted) {
+    const orig = original.toLowerCase().trim();
+    const subm = submitted.toLowerCase().trim();
+    
+    if (orig === subm) {
+      return { match: true, confidence: 100 };
+    }
+    
+    // Check if the domain and username are similar
+    const origParts = orig.split('@');
+    const submParts = subm.split('@');
+    
+    if (origParts.length === 2 && submParts.length === 2) {
+      const usernameSim = this.calculateSimilarity(origParts[0], submParts[0]);
+      const domainSim = this.calculateSimilarity(origParts[1], submParts[1]);
+      
+      const avgSimilarity = (usernameSim + domainSim) / 2;
+      const confidence = Math.round(avgSimilarity * 100);
+      
+      return {
+        match: confidence >= 80,
+        confidence
+      };
+    }
+    
+    return { match: false, confidence: 0 };
+  }
+
+  verifyPhone(original, submitted) {
+    // Normalize phone numbers - remove all non-digits except +
+    const normalizePhone = (phone) => {
+      return phone.replace(/[^\d+]/g, '');
+    };
+    
+    const orig = normalizePhone(original);
+    const subm = normalizePhone(submitted);
+    
+    if (orig === subm) {
+      return { match: true, confidence: 100 };
+    }
+    
+    // Check if one number is a subset of another (country code scenarios)
+    if (orig.includes(subm) || subm.includes(orig)) {
+      return { match: true, confidence: 90 };
+    }
+    
+    // Check similarity of last 10 digits for international numbers
+    const origLast10 = orig.slice(-10);
+    const submLast10 = subm.slice(-10);
+    
+    if (origLast10 === submLast10 && origLast10.length === 10) {
+      return { match: true, confidence: 85 };
+    }
+    
+    return { match: false, confidence: 0 };
+  }
+
+  verifyDate(original, submitted) {
+    // Try to parse dates in various formats
+    const parseDate = (dateStr) => {
+      const formats = [
+        /(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})/,
+        /(\d{2,4})[-\/](\d{1,2})[-\/](\d{1,2})/
+      ];
+      
+      for (const format of formats) {
+        const match = dateStr.match(format);
+        if (match) {
+          return {
+            part1: match[1],
+            part2: match[2], 
+            part3: match[3]
+          };
+        }
+      }
+      return null;
+    };
+    
+    const origDate = parseDate(original);
+    const submDate = parseDate(submitted);
+    
+    if (!origDate || !submDate) {
+      return { match: false, confidence: 0 };
+    }
+    
+    // Compare date parts
+    const matches = [
+      origDate.part1 === submDate.part1,
+      origDate.part2 === submDate.part2,
+      origDate.part3 === submDate.part3
+    ].filter(Boolean).length;
+    
+    const confidence = Math.round((matches / 3) * 100);
+    
+    return {
+      match: matches >= 2,
+      confidence
+    };
+  }
+
+  verifyAddress(original, submitted) {
+    const normalizeAddress = (addr) => {
+      return addr.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    const orig = normalizeAddress(original);
+    const subm = normalizeAddress(submitted);
+    
+    if (orig === subm) {
+      return { match: true, confidence: 100 };
+    }
+    
+    const origWords = orig.split(' ').filter(word => word.length > 2);
+    const submWords = subm.split(' ').filter(word => word.length > 2);
+    
+    const commonWords = origWords.filter(word => 
+      submWords.includes(word)
+    );
+    
+    const similarity = commonWords.length / Math.max(origWords.length, submWords.length);
+    const confidence = Math.round(similarity * 100);
+    
+    return {
+      match: confidence >= 60,
+      confidence
+    };
+  }
+
+  verifyText(original, submitted) {
+    const similarity = this.calculateSimilarity(original, submitted);
+    const confidence = Math.round(similarity * 100);
+    
+    return {
+      match: confidence >= 70,
+      confidence
+    };
+  }
+
+  verifyGeneric(original, submitted) {
+    const similarity = this.calculateSimilarity(original, submitted);
+    const confidence = Math.round(similarity * 100);
+    
+    return {
+      match: confidence >= 80,
+      confidence
+    };
+  }
+
+  calculateSimilarity(str1, str2) {
+    if (str1 === str2) return 1;
+    
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1;
+    
+    const distance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+  }
+
+  levenshteinDistance(str1, str2) {
     const matrix = [];
     
     for (let i = 0; i <= str2.length; i++) {
@@ -31,225 +358,19 @@ class VerificationService {
     return matrix[str2.length][str1.length];
   }
 
-  calculateSimilarity(str1, str2) {
-    if (!str1 || !str2) return 0;
-    
-    const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
-    
-    if (longer.length === 0) return 1.0;
-    
-    const editDistance = this.calculateLevenshteinDistance(longer, shorter);
-    return (longer.length - editDistance) / longer.length;
-  }
-
-  normalizeText(text) {
-    if (typeof text !== 'string') return '';
-    
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s@.-]/g, '')
-      .replace(/\s+/g, ' ');
-  }
-
-  verifyField(originalValue, submittedValue, fieldType = 'text') {
-    const normalizedOriginal = this.normalizeText(originalValue);
-    const normalizedSubmitted = this.normalizeText(submittedValue);
-    
-    if (normalizedOriginal === normalizedSubmitted) {
-      return {
-        match: true,
-        confidence: 100,
-        similarity: 1.0,
-        notes: 'Exact match'
-      };
-    }
-    
-    const similarity = this.calculateSimilarity(normalizedOriginal, normalizedSubmitted);
-    const confidence = Math.round(similarity * 100);
-    const match = similarity >= this.similarityThreshold;
-    
-    let notes = '';
-    if (!match) {
-      if (similarity > 0.5) {
-        notes = 'Partial match - possible OCR error';
-      } else {
-        notes = 'Significant difference detected';
-      }
-    } else {
-      notes = 'Good match within tolerance';
-    }
-    
-    // Special handling for specific field types
-    switch (fieldType) {
-      case 'email':
-        const emailMatch = this.verifyEmail(originalValue, submittedValue);
-        return { ...emailMatch, similarity };
-        
-      case 'phone':
-        const phoneMatch = this.verifyPhone(originalValue, submittedValue);
-        return { ...phoneMatch, similarity };
-        
-      case 'date':
-        const dateMatch = this.verifyDate(originalValue, submittedValue);
-        return { ...dateMatch, similarity };
-        
-      default:
-        return {
-          match,
-          confidence,
-          similarity,
-          notes
-        };
-    }
-  }
-
-  verifyEmail(original, submitted) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailRegex.test(submitted)) {
-      return {
-        match: false,
-        confidence: 0,
-        notes: 'Invalid email format'
-      };
-    }
-    
-    const similarity = this.calculateSimilarity(
-      this.normalizeText(original),
-      this.normalizeText(submitted)
-    );
+  generateSummary(results) {
+    const totalFields = results.length;
+    const matchedFields = results.filter(result => result.match).length;
+    const averageConfidence = totalFields > 0 
+      ? Math.round(results.reduce((sum, result) => sum + result.confidence, 0) / totalFields)
+      : 0;
     
     return {
-      match: similarity >= 0.9,
-      confidence: Math.round(similarity * 100),
-      notes: similarity >= 0.9 ? 'Valid email format' : 'Email mismatch'
+      totalFields,
+      matchedFields,
+      averageConfidence,
+      overallMatch: matchedFields >= Math.ceil(totalFields * 0.7) && averageConfidence >= 60
     };
-  }
-
-  verifyPhone(original, submitted) {
-    // Remove all non-digit characters
-    const cleanOriginal = original.replace(/\D/g, '');
-    const cleanSubmitted = submitted.replace(/\D/g, '');
-    
-    if (cleanOriginal === cleanSubmitted) {
-      return {
-        match: true,
-        confidence: 100,
-        notes: 'Phone numbers match'
-      };
-    }
-    
-    // Check if it's a formatting difference (e.g., +1 prefix)
-    const similarity = this.calculateSimilarity(cleanOriginal, cleanSubmitted);
-    
-    return {
-      match: similarity >= 0.8,
-      confidence: Math.round(similarity * 100),
-      notes: similarity >= 0.8 ? 'Phone format variation' : 'Phone number mismatch'
-    };
-  }
-
-  verifyDate(original, submitted) {
-    try {
-      const originalDate = new Date(original);
-      const submittedDate = new Date(submitted);
-      
-      if (originalDate.getTime() === submittedDate.getTime()) {
-        return {
-          match: true,
-          confidence: 100,
-          notes: 'Dates match exactly'
-        };
-      }
-      
-      // Check if it's just a format difference
-      if (originalDate.toDateString() === submittedDate.toDateString()) {
-        return {
-          match: true,
-          confidence: 95,
-          notes: 'Same date, different format'
-        };
-      }
-      
-      return {
-        match: false,
-        confidence: 0,
-        notes: 'Date mismatch'
-      };
-    } catch (error) {
-      return {
-        match: false,
-        confidence: 0,
-        notes: 'Invalid date format'
-      };
-    }
-  }
-
-  verifyDocument(extractedData, submittedData) {
-    const results = [];
-    const summary = {
-      totalFields: 0,
-      matchedFields: 0,
-      averageConfidence: 0,
-      overallMatch: false
-    };
-
-    let totalConfidence = 0;
-
-    // Verify each submitted field against extracted data
-    Object.entries(submittedData).forEach(([fieldName, submittedValue]) => {
-      if (submittedValue && submittedValue.trim()) {
-        const originalValue = extractedData[fieldName] || '';
-        const fieldType = this.detectFieldType(fieldName, submittedValue);
-        
-        const verification = this.verifyField(originalValue, submittedValue, fieldType);
-        
-        results.push({
-          field: fieldName,
-          originalValue,
-          submittedValue,
-          ...verification,
-          fieldType,
-          timestamp: new Date()
-        });
-
-        summary.totalFields++;
-        if (verification.match) {
-          summary.matchedFields++;
-        }
-        totalConfidence += verification.confidence;
-      }
-    });
-
-    if (summary.totalFields > 0) {
-      summary.averageConfidence = Math.round(totalConfidence / summary.totalFields);
-      summary.overallMatch = summary.matchedFields / summary.totalFields >= 0.7;
-    }
-
-    return {
-      results,
-      summary
-    };
-  }
-
-  detectFieldType(fieldName, value) {
-    const name = fieldName.toLowerCase();
-    
-    if (name.includes('email') || /@/.test(value)) {
-      return 'email';
-    }
-    
-    if (name.includes('phone') || name.includes('tel') || /^\+?[\d\s\-\(\)]+$/.test(value)) {
-      return 'phone';
-    }
-    
-    if (name.includes('date') || name.includes('birth') || /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(value)) {
-      return 'date';
-    }
-    
-    return 'text';
   }
 }
 

@@ -14,7 +14,6 @@ class VerificationController {
         });
       }
 
-      // Find the document
       const document = await Document.findById(documentId);
       
       if (!document) {
@@ -24,48 +23,47 @@ class VerificationController {
         });
       }
 
-      // Convert Map to plain object for verification
-      const extractedData = Object.fromEntries(document.extractedData);
+      // Convert Map to plain object for verification - handle both Map and plain object
+      let extractedData = {};
+      if (document.extractedData) {
+        if (document.extractedData instanceof Map) {
+          extractedData = Object.fromEntries(document.extractedData);
+        } else {
+          extractedData = document.extractedData;
+        }
+      }
 
-      // Create flat object for verification from nested submittedData
-      const flatSubmittedData = {
-        firstName: submittedData.personalInfo?.firstName,
-        middleName: submittedData.personalInfo?.middleName,
-        lastName: submittedData.personalInfo?.lastName,
-        gender: submittedData.personalInfo?.gender,
-        dateOfBirth: submittedData.personalInfo?.dateOfBirth,
-        age: submittedData.personalInfo?.age,
-        nationality: submittedData.personalInfo?.nationality,
-        occupation: submittedData.personalInfo?.occupation,
-        phone: submittedData.contactInfo?.phone,
-        email: submittedData.contactInfo?.email,
-        addressLine1: submittedData.address?.line1,
-        addressLine2: submittedData.address?.line2,
-        city: submittedData.address?.city,
-        state: submittedData.address?.state,
-        pinCode: submittedData.address?.pinCode
+      console.log('Extracted data from document:', extractedData);
+      console.log('Submitted data from form:', submittedData);
+
+      // Perform verification using the existing verification service
+      const verificationResult = verificationService.verifyDocument(extractedData, submittedData);
+
+      // Create registration record - keep existing structure from frontend
+      const registration = new Registration(submittedData);
+      
+      // Add metadata
+      registration.metadata = {
+        submittedAt: new Date(),
+        extractedFrom: 'OCR',
+        documentId: documentId,
+        verificationStatus: verificationResult.summary.overallMatch ? 'verified' : 'pending',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        processingTime: Date.now() - (req.body.startTime || Date.now()),
+        ocrConfidence: document.ocrConfidence
       };
 
-      // Perform verification
-      const verificationResult = verificationService.verifyDocument(extractedData, flatSubmittedData);
-
-      // Create registration record with verification results
-      const registration = new Registration({
-        ...submittedData,
-        metadata: {
-          ...submittedData.metadata,
-          documentId: documentId,
-          verificationStatus: verificationResult.summary.overallMatch ? 'verified' : 'pending',
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
-        },
-        verificationResults: verificationResult.results
-      });
+      // Add verification results
+      registration.verificationResults = verificationResult.results;
 
       // Save registration to database
       const savedRegistration = await registration.save();
 
       // Update document with verification results
+      if (!document.verificationResults) {
+        document.verificationResults = [];
+      }
       document.verificationResults = verificationResult.results;
       document.status = 'verified';
       await document.save();
@@ -87,8 +85,7 @@ class VerificationController {
     } catch (error) {
       console.error('Verification and save error:', error);
       
-      // Handle duplicate email error
-      if (error.code === 11000 && error.keyPattern?.['contactInfo.email']) {
+      if (error.code === 11000 && error.keyPattern?.email) {
         return res.status(400).json({
           success: false,
           message: 'Email address already exists in our records'
@@ -98,7 +95,7 @@ class VerificationController {
       res.status(500).json({
         success: false,
         message: 'Failed to verify and save registration',
-        error: error.message
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
       });
     }
   }
@@ -183,18 +180,24 @@ class VerificationController {
       let searchCriteria = {};
       
       if (field) {
-        // Search specific field
         searchCriteria[field] = { $regex: query, $options: 'i' };
       } else {
-        // Search across multiple fields
         searchCriteria = {
           $or: [
-            { 'personalInfo.firstName': { $regex: query, $options: 'i' } },
-            { 'personalInfo.lastName': { $regex: query, $options: 'i' } },
-            { 'contactInfo.email': { $regex: query, $options: 'i' } },
-            { 'contactInfo.phone': { $regex: query, $options: 'i' } }
+            { name: { $regex: query, $options: 'i' } },
+            { email: { $regex: query, $options: 'i' } },
+            { phone: { $regex: query, $options: 'i' } },
+            { address: { $regex: query, $options: 'i' } }
           ]
         };
+
+        // Add occupation and nationality if they exist in the model
+        if (Registration.schema.paths.occupation) {
+          searchCriteria.$or.push({ occupation: { $regex: query, $options: 'i' } });
+        }
+        if (Registration.schema.paths.nationality) {
+          searchCriteria.$or.push({ nationality: { $regex: query, $options: 'i' } });
+        }
       }
 
       const registrations = await Registration.find(searchCriteria)
@@ -215,6 +218,32 @@ class VerificationController {
       res.status(500).json({
         success: false,
         message: 'Failed to search registrations',
+        error: error.message
+      });
+    }
+  }
+
+  async getRegistrationStats(req, res) {
+    try {
+      const totalRegistrations = await Registration.countDocuments();
+      const verifiedRegistrations = await Registration.countDocuments({ 'metadata.verificationStatus': 'verified' });
+      const pendingRegistrations = await Registration.countDocuments({ 'metadata.verificationStatus': 'pending' });
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          total: totalRegistrations,
+          verified: verifiedRegistrations,
+          pending: pendingRegistrations,
+          rejected: totalRegistrations - verifiedRegistrations - pendingRegistrations
+        }
+      });
+
+    } catch (error) {
+      console.error('Get registration stats error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve registration statistics',
         error: error.message
       });
     }

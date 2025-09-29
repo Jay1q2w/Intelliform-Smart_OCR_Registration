@@ -170,7 +170,7 @@ class OCRController {
       } catch (fileError) {
         console.error('Failed to delete file:', fileError);
       }
-
+    
       // Delete from database
       await Document.findByIdAndDelete(id);
 

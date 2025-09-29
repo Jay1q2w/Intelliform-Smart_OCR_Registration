@@ -100,8 +100,17 @@ export const deleteDocument = async (documentId) => {
 };
 
 // Verification API endpoints
+// Update the verification API call
 export const verifyAndSaveRegistration = async (verificationData) => {
-  return await api.post('/verification/register', verificationData);
+  try {
+    console.log('Sending verification data:', verificationData);
+    const response = await api.post('/verification/register', verificationData);
+    console.log('Verification response:', response);
+    return response;
+  } catch (error) {
+    console.error('Verification API error:', error);
+    throw error;
+  }
 };
 
 export const getRegistration = async (registrationId) => {

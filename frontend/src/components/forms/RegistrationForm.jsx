@@ -1,78 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Edit3, Check, User, Mail, Phone, MapPin, Calendar, Users, Home, Globe } from 'lucide-react';
+import { Save, Edit3, Check, User, Mail, Phone, MapPin, Calendar, Users } from 'lucide-react';
 
 const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    middleName: '',
-    lastName: '',
     name: '',
-    gender: '',
-    dateOfBirth: '',
     age: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    pinCode: '',
+    gender: '',
     address: '',
-    phone: '',
     email: '',
+    phone: '',
+    dateOfBirth: '',
     occupation: '',
+    emergencyContact: '',
     nationality: ''
   });
 
   const [editMode, setEditMode] = useState({});
   const [errors, setErrors] = useState({});
 
+  // Auto-populate form with extracted data
   useEffect(() => {
     if (extractedData) {
-      console.log('Received extracted data:', extractedData);
-      
       const mappedData = {
-        firstName: extractedData.firstName || extractedData['first name'] || '',
-        middleName: extractedData.middleName || extractedData['middle name'] || '',
-        lastName: extractedData.lastName || extractedData['last name'] || extractedData.surname || '',
-        name: extractedData.name || extractedData.fullName || '',
-        gender: extractedData.gender || '',
-        dateOfBirth: extractedData.dateOfBirth || extractedData.dob || '',
+        name: extractedData.name || extractedData.fullName || extractedData['full name'] || '',
         age: extractedData.age || '',
-        addressLine1: extractedData.addressLine1 || extractedData['address line 1'] || '',
-        addressLine2: extractedData.addressLine2 || extractedData['address line 2'] || '',
-        city: extractedData.city || '',
-        state: extractedData.state || '',
-        pinCode: extractedData.pinCode || extractedData.zip || '',
+        gender: extractedData.gender || '',
         address: extractedData.address || '',
-        phone: extractedData.phone || extractedData.mobile || '',
-        email: extractedData.email || extractedData.emailId || '',
-        occupation: extractedData.occupation || '',
-        nationality: extractedData.nationality || ''
+        email: extractedData.email || extractedData.emailId || extractedData['email id'] || '',
+        phone: extractedData.phone || extractedData.mobile || extractedData.phoneNumber || extractedData['phone number'] || '',
+        dateOfBirth: extractedData.dateOfBirth || extractedData.dob || extractedData.birthDate || '',
+        occupation: extractedData.occupation || extractedData.job || '',
+        emergencyContact: extractedData.emergencyContact || extractedData.emergency || '',
+        nationality: extractedData.nationality || extractedData.country || ''
       };
       
-      // If full name exists but components don't, try to split
-      if (mappedData.name && !mappedData.firstName && !mappedData.lastName) {
-        const nameParts = mappedData.name.split(' ');
-        if (nameParts.length >= 2) {
-          mappedData.firstName = nameParts[0];
-          if (nameParts.length === 3) {
-            mappedData.middleName = nameParts[1];
-            mappedData.lastName = nameParts[2];
-          } else {
-            mappedData.lastName = nameParts.slice(1).join(' ');
-          }
-        }
-      }
-      
-      console.log('Mapped form data:', mappedData);
       setFormData(mappedData);
-      
-      // Auto-enable edit mode for empty fields
-      const newEditMode = {};
-      Object.keys(mappedData).forEach(key => {
-        newEditMode[key] = !mappedData[key];
-      });
-      setEditMode(newEditMode);
     }
   }, [extractedData]);
 
@@ -82,52 +45,33 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
       [field]: value
     }));
     
-    // Update full name when name components change
-    if (['firstName', 'middleName', 'lastName'].includes(field)) {
-      const updatedData = { ...formData, [field]: value };
-      const nameParts = [];
-      if (updatedData.firstName) nameParts.push(updatedData.firstName);
-      if (updatedData.middleName) nameParts.push(updatedData.middleName);
-      if (updatedData.lastName) nameParts.push(updatedData.lastName);
-      setFormData(prev => ({ ...prev, name: nameParts.join(' ') }));
-    }
-    
-    // Update full address when address components change
-    if (['addressLine1', 'addressLine2', 'city', 'state', 'pinCode'].includes(field)) {
-      const updatedData = { ...formData, [field]: value };
-      const addressParts = [];
-      if (updatedData.addressLine1) addressParts.push(updatedData.addressLine1);
-      if (updatedData.addressLine2) addressParts.push(updatedData.addressLine2);
-      if (updatedData.city) addressParts.push(updatedData.city);
-      if (updatedData.state) addressParts.push(updatedData.state);
-      if (updatedData.pinCode) addressParts.push(updatedData.pinCode);
-      setFormData(prev => ({ ...prev, address: addressParts.join(', ') }));
-    }
-    
+    // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
     }
   };
 
   const toggleEditMode = (field) => {
-    setEditMode(prev => ({ ...prev, [field]: !prev[field] }));
+    setEditMode(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state.trim()) newErrors.state = 'State is required';
-    if (!formData.pinCode.trim()) newErrors.pinCode = 'Pin code is required';
+    if (!formData.address.trim()) newErrors.address = 'Address is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -137,74 +81,85 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Create clean data object for submission
-      const submissionData = {
-        personalInfo: {
-          firstName: formData.firstName,
-          middleName: formData.middleName,
-          lastName: formData.lastName,
-          fullName: formData.name,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth,
-          age: formData.age,
-          nationality: formData.nationality,
-          occupation: formData.occupation
-        },
-        contactInfo: {
-          phone: formData.phone,
-          email: formData.email
-        },
-        address: {
-          line1: formData.addressLine1,
-          line2: formData.addressLine2,
-          city: formData.city,
-          state: formData.state,
-          pinCode: formData.pinCode,
-          fullAddress: formData.address
-        },
-        metadata: {
-          submittedAt: new Date().toISOString(),
-          extractedFrom: 'OCR'
-        }
-      };
-      
-      onSubmit(submissionData);
+      onSubmit(formData);
     }
   };
 
-  const formSections = [
+  const formFields = [
     {
-      title: 'Personal Information',
+      key: 'name',
+      label: 'Full Name',
       icon: User,
-      fields: [
-        { key: 'firstName', label: 'First Name', type: 'text', required: true },
-        { key: 'middleName', label: 'Middle Name', type: 'text' },
-        { key: 'lastName', label: 'Last Name', type: 'text', required: true },
-        { key: 'gender', label: 'Gender', type: 'select', options: ['', 'Male', 'Female', 'Other'] },
-        { key: 'dateOfBirth', label: 'Date of Birth', type: 'date' },
-        { key: 'age', label: 'Age', type: 'number', min: '1', max: '150' },
-        { key: 'nationality', label: 'Nationality', type: 'text' },
-        { key: 'occupation', label: 'Occupation', type: 'text' }
-      ]
+      type: 'text',
+      required: true,
+      placeholder: 'Enter your full name'
     },
     {
-      title: 'Address Information',
-      icon: Home,
-      fields: [
-        { key: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
-        { key: 'addressLine2', label: 'Address Line 2', type: 'text' },
-        { key: 'city', label: 'City', type: 'text', required: true },
-        { key: 'state', label: 'State', type: 'text', required: true },
-        { key: 'pinCode', label: 'Pin Code', type: 'text', required: true }
-      ]
+      key: 'age',
+      label: 'Age',
+      icon: Calendar,
+      type: 'number',
+      placeholder: 'Enter your age'
     },
     {
-      title: 'Contact Information',
+      key: 'gender',
+      label: 'Gender',
+      icon: Users,
+      type: 'select',
+      options: ['', 'Male', 'Female', 'Other'],
+      placeholder: 'Select gender'
+    },
+    {
+      key: 'email',
+      label: 'Email ID',
+      icon: Mail,
+      type: 'email',
+      required: true,
+      placeholder: 'Enter your email address'
+    },
+    {
+      key: 'phone',
+      label: 'Phone Number',
       icon: Phone,
-      fields: [
-        { key: 'phone', label: 'Phone Number', type: 'tel', required: true },
-        { key: 'email', label: 'Email ID', type: 'email', required: true }
-      ]
+      type: 'tel',
+      required: true,
+      placeholder: 'Enter your phone number'
+    },
+    {
+      key: 'address',
+      label: 'Address',
+      icon: MapPin,
+      type: 'textarea',
+      required: true,
+      placeholder: 'Enter your complete address'
+    },
+    {
+      key: 'dateOfBirth',
+      label: 'Date of Birth',
+      icon: Calendar,
+      type: 'date',
+      placeholder: 'Select your date of birth'
+    },
+    {
+      key: 'occupation',
+      label: 'Occupation',
+      icon: User,
+      type: 'text',
+      placeholder: 'Enter your occupation'
+    },
+    {
+      key: 'emergencyContact',
+      label: 'Emergency Contact',
+      icon: Phone,
+      type: 'tel',
+      placeholder: 'Enter emergency contact number'
+    },
+    {
+      key: 'nationality',
+      label: 'Nationality',
+      icon: User,
+      type: 'text',
+      placeholder: 'Enter your nationality'
     }
   ];
 
@@ -212,19 +167,6 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
     const isEditing = editMode[field.key];
     const hasError = errors[field.key];
     const hasExtractedData = extractedData && extractedData[field.key];
-    
-    const getFieldIcon = (key) => {
-      if (key.includes('name')) return User;
-      if (key.includes('address') || key.includes('city') || key.includes('state') || key.includes('pin')) return MapPin;
-      if (key === 'phone') return Phone;
-      if (key === 'email') return Mail;
-      if (key === 'dateOfBirth' || key === 'age') return Calendar;
-      if (key === 'gender') return Users;
-      if (key === 'nationality') return Globe;
-      return User;
-    };
-
-    const FieldIcon = getFieldIcon(field.key);
     
     return (
       <motion.div
@@ -236,26 +178,37 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
       >
         <label className="field-label">
           <div className="label-content">
-            <FieldIcon size={18} />
+            <field.icon size={18} />
             <span>{field.label} {field.required && <span className="required">*</span>}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => toggleEditMode(field.key)}
-            className="edit-button"
-            title={isEditing ? 'Save changes' : 'Edit field'}
-          >
-            {isEditing ? <Check size={16} /> : <Edit3 size={16} />}
-          </button>
+          {hasExtractedData && (
+            <button
+              type="button"
+              onClick={() => toggleEditMode(field.key)}
+              className="edit-button"
+              title={isEditing ? 'Save changes' : 'Edit field'}
+            >
+              {isEditing ? <Check size={16} /> : <Edit3 size={16} />}
+            </button>
+          )}
         </label>
         
         <div className="field-input-container">
-          {field.type === 'select' ? (
+          {field.type === 'textarea' ? (
+            <textarea
+              value={formData[field.key]}
+              onChange={(e) => handleInputChange(field.key, e.target.value)}
+              className={`field-input ${isEditing ? 'editing' : ''}`}
+              placeholder={field.placeholder}
+              rows={3}
+              readOnly={hasExtractedData && !isEditing}
+            />
+          ) : field.type === 'select' ? (
             <select
               value={formData[field.key]}
               onChange={(e) => handleInputChange(field.key, e.target.value)}
               className={`field-input ${isEditing ? 'editing' : ''}`}
-              disabled={!isEditing}
+              disabled={hasExtractedData && !isEditing}
             >
               {field.options.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -267,22 +220,22 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
               value={formData[field.key]}
               onChange={(e) => handleInputChange(field.key, e.target.value)}
               className={`field-input ${isEditing ? 'editing' : ''}`}
-              placeholder={`Enter your ${field.label.toLowerCase()}`}
-              readOnly={!isEditing}
-              min={field.min}
-              max={field.max}
+              placeholder={field.placeholder}
+              readOnly={hasExtractedData && !isEditing}
             />
           )}
           
           {hasExtractedData && (
             <div className="extracted-indicator">
-              <span>Auto-filled</span>
+              <span>Auto-filled from document</span>
             </div>
           )}
         </div>
         
         {hasError && (
-          <div className="field-error">{hasError}</div>
+          <div className="field-error">
+            {hasError}
+          </div>
         )}
       </motion.div>
     );
@@ -295,31 +248,10 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="extraction-debug">
-        <details>
-          <summary>Debug: Extracted Data</summary>
-          <pre>{JSON.stringify(extractedData, null, 2)}</pre>
-        </details>
-      </div>
-      
       <form className="registration-form" onSubmit={handleSubmit}>
-        {formSections.map((section, sectionIndex) => (
-          <motion.div
-            key={section.title}
-            className="form-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: sectionIndex * 0.1 }}
-          >
-            <div className="section-header">
-              <section.icon size={24} />
-              <h3>{section.title}</h3>
-            </div>
-            <div className="section-fields">
-              {section.fields.map(field => renderField(field))}
-            </div>
-          </motion.div>
-        ))}
+        <div className="form-grid">
+          {formFields.map(field => renderField(field))}
+        </div>
 
         <motion.div
           className="form-actions"
@@ -329,18 +261,18 @@ const RegistrationForm = ({ extractedData, onSubmit, loading }) => {
         >
           <button
             type="submit"
-            className="submit-button verified"
+            className="submit-button"
             disabled={loading}
           >
             {loading ? (
               <div className="loading-content">
                 <div className="spinner small" />
-                <span>Verifying & Saving...</span>
+                <span>Verifying Registration...</span>
               </div>
             ) : (
               <div className="button-content">
                 <Save size={20} />
-                <span>OK Verified</span>
+                <span>Submit & Verify Registration</span>
               </div>
             )}
           </button>

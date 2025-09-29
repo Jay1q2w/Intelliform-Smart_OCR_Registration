@@ -14,4 +14,7 @@ router.get('/registrations', verificationController.getAllRegistrations);
 // GET /api/verification/search - Search registrations
 router.get('/search', verificationController.searchRegistrations);
 
+// GET /api/verification/stats - Get registration statistics
+router.get('/stats', verificationController.getRegistrationStats);
+
 module.exports = router;
