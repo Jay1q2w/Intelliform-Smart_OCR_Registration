@@ -56,7 +56,8 @@ const Home = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h1>Smart Registration</h1>
+              <h1>IntelliForm</h1>
+              <h3>Smart Registrations</h3>
               <p>
                 Professional document processing with OCR technology.<br />
                 Extract, verify, and Autofill form data with accuracy and security.
@@ -120,10 +121,10 @@ const Home = () => {
             viewport={{ once: true }}
           >
             <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Enterprise Features
+              Features
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-              Built for enterprise workflows with advanced security, scalability, and integration capabilities.
+              Built for workflows with advanced security, scalability, and integration capabilities.
             </p>
           </motion.div>
 

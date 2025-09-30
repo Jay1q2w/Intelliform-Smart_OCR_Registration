@@ -836,9 +836,10 @@ textarea.field-input {
   }
   
   .step-header {
-    flex-direction: column;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: var(--space-lg);
-    align-items: flex-start;
   }
   
   .file-types {

@@ -173,6 +173,8 @@ const handleFormSubmission = async (formData) => {
                     <RefreshCw size={16} />
                     Upload New Document
                   </button>
+                  <p>     </p>
+                  <p>     </p>
                 </div>
 
                 <RegistrationForm

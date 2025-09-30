@@ -3,7 +3,7 @@
 ## Project Overview
 
 A comprehensive Node.js-based OCR solution that automatically extracts text from documents (images/PDFs), intelligently auto-fills digital forms, and verifies data accuracy using advanced comparison algorithms. The system utilizes multiple OCR engines including Tesseract.js and Microsoft TrOCR for optimal text recognition.
-## ✨ Features
+## ✫ Features
 
 ### Core Functionality
 - **Document Processing**: Handle PDFs and images (JPEG, PNG) with jimp and Parse-pdf.
@@ -18,7 +18,7 @@ A comprehensive Node.js-based OCR solution that automatically extracts text from
 - **Confidence Scoring**: OCR confidence and verification match percentages by modelling multiple factors like Image quality impact,Word-level confidence distribution, Text structure coherence etc.
 - **Google Sheets Integration**: Automatic data export to spreadsheets via Google Sheet API
 
-## Tech Stack Used
+## ★ Tech Stack Used
 
 ### Backend
 - **Node.js** with **Express.js**
@@ -29,13 +29,13 @@ A comprehensive Node.js-based OCR solution that automatically extracts text from
 - **Natural** for text similarity algorithms
 ### Frontend
 - **React 18** and **JavaScript** 
-- **CSS**, **Framer-Motion** and **lucide-react** for styling
+- **CSS**, **Framer-Motion**, **lucide-react** and **react-hot-toast** for styling
 
 ### External Services
 - **Google Sheets API** for data export to spreadsheet
 - **Flask Python API**  for TrOCR integration
 
-## Get Started
+## ✫ Get Started
 Clone the Repository  
    ```bash
    git clone https://github.com/Jay1q2w/Intelliform-Smart_OCR_Registration
@@ -44,6 +44,7 @@ Clone the Repository
 ## Frontend Setup
 
 1. Navigate to the Frontend Directory and install dependancies
+
    ```bash
    cd Intelliform-Smart_OCR_Registration/frontend
    npm i  #install dependancies (node_modules will be formed)
@@ -55,9 +56,8 @@ Clone the Repository
 The frontend will be available at: `http://localhost:3000`  
  
 ## Backend Setup
-1. Navigate to the Backend Directory and install dependancies
+1. Open a seperate terminal, Navigate to the Backend Directory and install dependancies
    ```bash
-   cd .. // Get out of Frontend
    cd backend
    npm i  #install dependancies
    ```  
@@ -67,8 +67,9 @@ The frontend will be available at: `http://localhost:3000`
    ```  
 Backend Health Status will be available on `http://localhost:5000/api/health`
 
-- ### Create env for Backend
-    -  Create .env file inside the backend directory and add the following
+### Create .env for Backend
+-  Create .env file inside the backend directory and add the following
+
     ```
     NODE_ENV=development
     PORT=5000
@@ -96,7 +97,23 @@ Backend Health Status will be available on `http://localhost:5000/api/health`
         ```
 - Now you're ready to go with spreadsheets
 
-## How it Works
+## ✫ API Endpoints
+
+### OCR API Endpoints - Base path ( /api/ocr )
+- **POST	/extract** : Uploads a document for text extraction and parsing.
+- **GET	/documents** : Retrieves a paginated list of all processed documents.
+- **GET	/document/:id** : Fetches a single document's details by its unique ID
+- **DELETE	/document/:id** : Deletes a specific document from the database and the server's file system
+
+### Verification API Endpoints - Base path ( /api/verification )
+
+- **POST	/register** : Verifies submitted data against a processed document and saves the registration to the database and Google Sheets.
+- **GET	/registrations** : Retrieves a paginated list of all saved registrations.
+- **GET	/registration/:id** : Fetches a single registration record by its unique ID
+- **GET	/search** : Searches for registrations based on a query string across multiple fields or a specific field
+
+
+## ✫  How it Works
 ### 1. Image Pre-Processing
 - **Grayscale Conversion** - Improve text contrast
 - **Noise Reduction** - Remove image artifacts
@@ -124,9 +141,20 @@ Backend Health Status will be available on `http://localhost:5000/api/health`
 ### 4. Auto Form-Fillup
 - Automatically populates digital forms with extracted data
 - Provides confidence scores for each field 
+### 5. Verfication Algorithms
+- Levenshtein distance for text similarity
+- Jaro-Winkler for string matching
+- Field-specific validation rules
 
-## OCR Engine Comparison
 
+## ✫ Performance Metrics
+
+- **OCR Accuracy**: 85-95% for printed text, 70-85% for handwritten
+- **Processing Time**: 2-8 seconds per page (depending on image quality)
+- **Auto-Fill Accuracy**: 80-90% for structured forms
+- **Verification Precision**: 70-95% for exact matches
+
+## ✫ OCR Engine Comparison
 ### Tesseract.js
 - Pros: Fast, good with structured documents, supports multiple languages
 - Cons: Lower accuracy with poor quality images
@@ -136,12 +164,6 @@ Backend Health Status will be available on `http://localhost:5000/api/health`
 - Cons: Slower processing, requires Python environment
 - Best For: High-quality documents, printed text with complex layouts
 
-## Performance Metrics
-
-- **OCR Accuracy**: 85-95% for printed text, 70-85% for handwritten
-- **Processing Time**: 2-8 seconds per page (depending on image quality)
-- **Auto-Fill Accuracy**: 80-90% for structured forms
-- **Verification Precision**: 70-95% for exact matches
 
 
 
