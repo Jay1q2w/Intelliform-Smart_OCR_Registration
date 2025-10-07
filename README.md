@@ -69,7 +69,6 @@ The frontend will be available at: `http://localhost:3000`
    cd backend
    npm i  #install dependancies
    ```  
-Backend Health Status will be available on `http://localhost:5000/api/health`
 
 ### Create .env for Backend
 -  Create .env file inside the backend directory and add the following
@@ -104,7 +103,7 @@ Backend Health Status will be available on `http://localhost:5000/api/health`
    ```bash
    npm run dev #Backend Starts
    ```  
-
+Backend Health Status will be available on `http://localhost:5000/api/health`
 
 ## ✫ API Endpoints
 
