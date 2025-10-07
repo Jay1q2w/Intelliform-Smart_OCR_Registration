@@ -69,10 +69,6 @@ The frontend will be available at: `http://localhost:3000`
    cd backend
    npm i  #install dependancies
    ```  
-2. Run the dev scripts
-   ```bash
-   npm run dev #Backend Starts
-   ```  
 Backend Health Status will be available on `http://localhost:5000/api/health`
 
 ### Create .env for Backend
@@ -104,6 +100,11 @@ Backend Health Status will be available on `http://localhost:5000/api/health`
         GOOGLE_CLIENT_X509_CERT_URL=from_the_JSON
         ```
 - Now you're ready to go with spreadsheets
+2. Run the dev scripts
+   ```bash
+   npm run dev #Backend Starts
+   ```  
+
 
 ## ✫ API Endpoints
 
