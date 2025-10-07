@@ -3,6 +3,14 @@
 ## Project Overview
 
 A comprehensive Node.js-based OCR solution that automatically extracts text from documents (images/PDFs), intelligently auto-fills digital forms, and verifies data accuracy using advanced comparison algorithms. The system utilizes multiple OCR engines including Tesseract.js and Microsoft TrOCR for optimal text recognition.
+
+## Demo Video
+
+https://github.com/user-attachments/assets/309c599a-ccdb-4b09-8480-6d7ea1ffe0d5
+
+https://github.com/user-attachments/assets/4af2de45-ad1a-4a2f-bcb2-5ff6887b875e
+
+
 ## ✫ Features
 
 ### Core Functionality
