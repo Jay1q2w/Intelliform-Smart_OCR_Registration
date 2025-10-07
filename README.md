@@ -4,9 +4,19 @@
 
 A comprehensive Node.js-based OCR solution that automatically extracts text from documents (images/PDFs), intelligently auto-fills digital forms, and verifies data accuracy using advanced comparison algorithms. The system utilizes multiple OCR engines including Tesseract.js and Microsoft TrOCR for optimal text recognition.
 
+
+### MOSIP DECODE 2025
+
+   - Team : OneManStack
+   - Name : Jay Gheewala
+
 ## Demo Video
 
+**Working of OCR and autofill**
+
 https://github.com/user-attachments/assets/309c599a-ccdb-4b09-8480-6d7ea1ffe0d5
+
+**RAW text extraction and backend workings** 
 
 https://github.com/user-attachments/assets/4af2de45-ad1a-4a2f-bcb2-5ff6887b875e
 
@@ -81,12 +91,12 @@ The frontend will be available at: `http://localhost:3000`
     JWT_SECRET=your_super_secret_jwt_key_here
     JWT_EXPIRE=30d
     ```  
-- ### Google Spreadsheet integration (If you want to export the data, otherwise Optional)
+- ### Google Spreadsheet integration (OPTIONAL, Add to env only if you want to export the data to sheets)
     1. Go to https://console.cloud.google.com/apis 
     2. Create a new project(e.g Smart_OCR)
     3. Navigate to APIs & Services → Library → search Google Sheets API → Enable
     4. In APIs & Services → Credentials, generate an API Key (for public sheets) or OAuth 2.0 credentials (if you need private access). Download JSON API.
-    3. In the same .env of backend paste this (from the JSON file)
+    3. In the same .env of backend paste this (from the JSON file) and keep the sheet to anyone with link can edit
 
         ```
         GOOGLE_SHEET_ID= SPREADSHEET_ID
