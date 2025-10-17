@@ -10,6 +10,9 @@ A comprehensive Node.js-based OCR solution that automatically extracts text from
    - Team : OneManStack
    - Name : Jay Gheewala
 
+## Live Link of the application
+https://intelliform-smart-ocr-registration.vercel.app/
+
 ## Demo Video
 
 **Working of OCR and autofill**
