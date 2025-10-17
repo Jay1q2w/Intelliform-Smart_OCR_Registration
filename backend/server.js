@@ -22,8 +22,10 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const frontendUrl = process.env.FRONTEND_URL;
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // Use the environment variable
+  origin: [frontendUrl, `${frontendUrl}/`],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
