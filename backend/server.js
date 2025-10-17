@@ -25,7 +25,7 @@ app.use(helmet({
 const frontendUrl = process.env.FRONTEND_URL;
 
 app.use(cors({
-  origin: [frontendUrl, `${frontendUrl}/`],
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
